@@ -14,24 +14,25 @@ from sklearn.datasets import load_digits
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import scale
 import seaborn as sns
+import pandas as pd
+
 
 def create_graph():
-
-    #load data of an 8x8 image
+    # load data of an 8x8 image
     ds = load_digits()
 
-    #standardize data along an axis
+    # standardize data along an axis
     dig_data = scale(ds.data)
 
-    #filer data into unique values
+    # filer data into unique values
     num = len(np.unique(ds.target))
-    
-    #pcauce dimensionality to 2 dimensions
+
+    # pcauce dimensionality to 2 dimensions
     pca = PCA(n_components=2).fit_transform(dig_data)
 
-    #Set boundaries for graph
+    # Set boundaries for graph
     h = 0.02
-    xmin, xmax = pca[:, 0].min() - 1, pca[:,0].max() + 1
+    xmin, xmax = pca[:, 0].min() - 1, pca[:, 0].max() + 1
     ymin, ymax = pca[:, 1].min() - 1, pca[:, 1].max() + 1
     xx, yy = np.meshgrid(np.arange(xmin, xmax, h), np.arange(ymin, ymax, h))
 
@@ -107,9 +108,46 @@ def create_graph():
     input("Press To Continue")
     plt.show()
 
+
+def new_graph():
+
+    #Create plot
+    sns.set(context="notebook", palette="Spectral", style='darkgrid', font_scale=1.5, color_codes=True)
+
+    #Link to dataset that I downloaded from Kaggle
+    dataset = pd.read_csv(r'C:\Users\jnich\OneDrive\Documents\Miscellaneous\SmartWatchPrices.csv', index_col='Brand')
+    dataset.head()
+    dataset.info()
+    dataset.describe()
+    dataset.isnull().sum()
+    #remove duplicate values
+    dataset.drop_duplicates(inplace=True)
+
+    #use columns 4 and 11
+    X = dataset.iloc[:, [4, 11]].values
+
+    #Use K medoids
+    kmedoids = KMedoids(n_clusters=5, init='k-medoids++', random_state=42)
+    y_kmedoids = kmedoids.fit(X)
+    y_kmedoids = kmedoids.predict(X)
+
+    plt.figure(figsize=(15, 7))
+    #plot each cluster
+    sns.scatterplot(X[y_kmedoids == 0, 1], color='yellow', label='Cluster 1', s=50)
+    sns.scatterplot(X[y_kmedoids == 1, 1], color='blue', label='Cluster 2', s=50)
+    sns.scatterplot(X[y_kmedoids == 2, 1], color='green', label='Cluster 3', s=50)
+    sns.scatterplot(X[y_kmedoids == 3, 1],  color='grey', label='Cluster 4', s=50)
+    sns.scatterplot(X[y_kmedoids == 4, 1],  color='orange', label='Cluster 5', s=50)
+    sns.scatterplot(x=kmedoids.cluster_centers_[:, 0],y= kmedoids.cluster_centers_[:, 1], color='red',label='Centroids', s=300, marker=',')
+
+    plt.grid(False)
+    plt.title('Clusters of Watches')
+    plt.xlabel('Resolution of Watch')
+    plt.ylabel('Price')
+    plt.legend()
+    plt.show()
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-
     create_graph()
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    input("Enter to Continue")
+    new_graph()
